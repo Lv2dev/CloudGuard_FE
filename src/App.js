@@ -1,25 +1,28 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import MemberLogin from './unauth/MemberLogin';
+import MemberSignUp from './unauth/MemberSignUp';
+import LoginWrapper from "./wrapper/LoginWrapper";
+
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const location = useLocation();
+
+    return (
+        <Routes>
+            <Route path="/login" element={
+                <LoginWrapper key={location.pathname}>
+                    <MemberLogin />
+                </LoginWrapper>
+            } />
+            <Route path="/signup" element={
+                <LoginWrapper key={location.pathname}>
+                    <MemberSignUp />
+                </LoginWrapper>
+            } />
+            {/* 다른 라우트들 */}
+        </Routes>
+    );
 }
 
 export default App;
