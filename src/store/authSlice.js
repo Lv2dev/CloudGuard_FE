@@ -7,6 +7,7 @@ export const authSlice = createSlice({
         accessToken: null,
         isLoggedIn: false,
         isLoading: true,
+        tree:null,
         // ... 기타 상태 ...
     },
     reducers: {
@@ -25,10 +26,13 @@ export const authSlice = createSlice({
         setLoading: (state, action) => {
             state.isLoading = action.payload;
         },
+        setTree: (state, action) => {
+            state.tree = action.payload;
+        },
         // ... 기타 리듀서 ...
     }
 });
 
-export const { login, updateAccessToken, logout , setLoading} = authSlice.actions;
+export const { login, updateAccessToken, logout , setLoading, setTree} = authSlice.actions;
 
 export default authSlice.reducer;

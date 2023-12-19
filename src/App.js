@@ -44,18 +44,22 @@ function App() {
         if (accessToken) {
             // 엑세스 토큰 유효성 검사
             if(checkValidToken(accessToken)){
+                console.log("유효한 토큰")
                 dispatch(login({ accessToken }));
+                // 만약 현재 경로가 /login 또는 /signup이라면 /home으로 이동
+                if (location.pathname === '/login' || location.pathname === '/signup') {
+                    navigate('/home');
+                }
             }else{
+                console.log("유효하지 않은 토큰")
                 checkAuthStatus(); // 추가적인 유효성 검사
             }
         } else {
+            console.log("토큰 없음")
             dispatch(logout());
+            navigate('/login');
         }
         dispatch(setLoading(false));
-        // 만약 현재 경로가 /login 또는 /signup이라면 /home으로 이동
-        if (location.pathname === '/login' || location.pathname === '/signup') {
-            navigate('/home');
-        }
     }, [dispatch]);
 
 

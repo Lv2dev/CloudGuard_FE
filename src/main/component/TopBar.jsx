@@ -1,4 +1,5 @@
-import * as React from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -12,13 +13,23 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
+import {useNavigate} from "react-router-dom";
+import {useDispatch, useSelector} from "react-redux";
+import {logout} from "../../store/authSlice";
 
 const pages = ['Products', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 function TopBar() {
-    const [anchorElNav, setAnchorElNav] = React.useState(null);
-    const [anchorElUser, setAnchorElUser] = React.useState(null);
+    const dispatch = useDispatch(); // Redux dispatch를 사용하기 위한 hook
+
+    const accessToken = useSelector(state => state.auth.accessToken);
+
+
+    const navigate = useNavigate();
+
+    const [anchorElNav, setAnchorElNav] = useState(null);
+    const [anchorElUser, setAnchorElUser] = useState(null);
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -35,8 +46,34 @@ function TopBar() {
         setAnchorElUser(null);
     };
 
+    const handleLogout = async () => {
+        try {
+            // 로그아웃 API 요청
+            await axios.post('http://localhost:8099/api/token/logout', {},
+                {
+                    //accessToken
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                withCredentials: true });
+
+            // Redux 상태 업데이트
+            dispatch(logout());
+
+            // 로컬 스토리지 클리어
+            localStorage.clear();
+
+            // 로그인 페이지로 리디렉션
+            navigate('/login');
+        } catch (error) {
+            console.error('Logout failed', error);
+            // 실패 처리, 예: 에러 메시지 표시
+        }
+    };
+
+
     return (
-        <AppBar position="sticky">
+        <AppBar position="sticky" style={{ background: 'linear-gradient(to right, #ff758c 0%, #ff7eb3 100%)' }}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -55,41 +92,34 @@ function TopBar() {
                             textDecoration: 'none',
                         }}
                     >
-                        LOGO
+                        CloudGuard
                     </Typography>
 
-                    <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-                        <IconButton
-                            size="large"
-                            aria-label="account of current user"
-                            aria-controls="menu-appbar"
-                            aria-haspopup="true"
-                            onClick={handleOpenNavMenu}
-                            color="inherit"
-                        >
-                            <MenuIcon />
-                        </IconButton>
+                    <Box sx={{ flexGrow: 0 }}>
+                        <Tooltip title="Open settings">
+                            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                            </IconButton>
+                        </Tooltip>
                         <Menu
+                            sx={{ mt: '45px' }}
                             id="menu-appbar"
-                            anchorEl={anchorElNav}
+                            anchorEl={anchorElUser}
                             anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'left',
+                                vertical: 'top',
+                                horizontal: 'right',
                             }}
                             keepMounted
                             transformOrigin={{
                                 vertical: 'top',
-                                horizontal: 'left',
+                                horizontal: 'right',
                             }}
-                            open={Boolean(anchorElNav)}
-                            onClose={handleCloseNavMenu}
-                            sx={{
-                                display: { xs: 'block', md: 'none' },
-                            }}
+                            open={Boolean(anchorElUser)}
+                            onClose={handleCloseUserMenu}
                         >
-                            {pages.map((page) => (
-                                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                                    <Typography textAlign="center">{page}</Typography>
+                            {settings.map((setting) => (
+                                <MenuItem key={setting} onClick={setting === 'Logout' ? handleLogout : handleCloseUserMenu}>
+                                    <Typography textAlign="center">{setting}</Typography>
                                 </MenuItem>
                             ))}
                         </Menu>
@@ -111,7 +141,7 @@ function TopBar() {
                             textDecoration: 'none',
                         }}
                     >
-                        LOGO
+                        CloudGuard
                     </Typography>
                     <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
                         {pages.map((page) => (
@@ -148,7 +178,7 @@ function TopBar() {
                             onClose={handleCloseUserMenu}
                         >
                             {settings.map((setting) => (
-                                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                                <MenuItem key={setting} onClick={setting === 'Logout' ? handleLogout : handleCloseUserMenu}>
                                     <Typography textAlign="center">{setting}</Typography>
                                 </MenuItem>
                             ))}
