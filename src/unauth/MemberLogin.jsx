@@ -1,7 +1,12 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Box, Button, TextField, Typography} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import { motion } from 'framer-motion';
+import {useDispatch, useSelector} from "react-redux";
+import axios from "axios";
+import {login, logout, setLoading} from "../store/authSlice";
+import axiosInstance from "../utils/axios";
+
 
 const pageVariants = {
     initial: {
@@ -26,6 +31,35 @@ const pageTransition = {
 function MemberLogin(props) {
     // navigate
     const navigate = useNavigate();
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const authState = useSelector((state) => state.auth);
+    const dispatch = useDispatch();
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        try {
+            const response = await axiosInstance.post('token/login', { email, password });
+            localStorage.setItem('accessToken', response.data.accessToken); // 로컬 스토리지에 저장
+            dispatch(login({
+                accessToken: response.data.accessToken
+            }));
+            console.log('로그인 성공')
+            dispatch(setLoading(false));
+
+            navigate('/home'); // 로그인 성공 후 리디렉션
+        } catch (error) {
+            console.error('Login failed', error);
+            alert('Login failed');
+        }
+    };
+
+
 
     return (
 
@@ -65,7 +99,9 @@ function MemberLogin(props) {
                         variant="outlined"
                         margin="normal"
                         fullWidth
-                        sx={{mb: 2}}
+                        sx={{ mb: 2 }}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                     />
                     <TextField
                         label="Password"
@@ -73,19 +109,22 @@ function MemberLogin(props) {
                         variant="outlined"
                         margin="normal"
                         fullWidth
-                        sx={{mb: 2}}
+                        sx={{ mb: 2 }}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                     />
                     <Button
                         variant="contained"
                         fullWidth
                         sx={{
                             mt: 2,
-                            mb: 2, // 로그인 버튼과 회원가입 버튼 사이의 마진 추가
+                            mb: 2,
                             color: 'white',
                             backgroundColor: '#333',
                             '&:hover': {backgroundColor: '#555'},
                             fontSize: {xs: '0.8rem', sm: '1rem', md: '1.2rem'},
                         }}
+                        onClick={handleLogin} // 로그인 함수 연결
                     >
                         Login
                     </Button>

@@ -26,7 +26,7 @@ function MemberSignUp(props) {
     const navigate = useNavigate();
 
     const [gender, setGender] = useState('1'); // 성별 초기값 설정 (예: 1-남성, 2-여성)
-    const [imagePreview, setImagePreview] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     const handleGenderChange = (event) => {
         setGender(event.target.value);
@@ -34,11 +34,9 @@ function MemberSignUp(props) {
 
     const handleImageChange = (event) => {
         const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImagePreview(reader.result);
-        };
-        reader.readAsDataURL(file);
+        if (file) {
+            setSelectedFile(file); // 파일 객체를 상태에 저장
+        }
     };
 
     const goBack = () => {
@@ -115,20 +113,35 @@ function MemberSignUp(props) {
         setLoading(true);
 
         // 입력되지 않은 것 있으면 체크
-        if(email == "" || password == "" || confirmPassword == ""){
+        if(email === "" || password === "" || confirmPassword === ""){
             alert("입력되지 않은 항목이 있습니다.");
             return;
         }
 
-        const payload = {
-            ...formData,
-        };
+        // FormData 객체 생성
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('nickname', formData.nickname);
+        formData.append('gender', gender);
+
+        // 프로필 이미지가 있으면 추가
+        if (selectedFile) {
+            formData.append('profile', selectedFile);
+        }
 
         try {
-            const response = await axios.post('http://localhost:8099/api/token/signup', payload);
+            const response = await axios.post('http://localhost:8099/api/token/signup', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             // 성공 처리
+            alert('회원가입이 완료되었습니다.');
+            navigate('/login');
         } catch (error) {
-            // 오류 처리
+            console.log(error)
+            alert(`Error: ${error.response?.data || error.message}`);
         } finally {
             setLoading(false);
         }
@@ -152,34 +165,19 @@ function MemberSignUp(props) {
                 {loading && (
                     <Box
                         sx={{
-                            position: 'absolute',
+                            position: 'fixed',
                             top: 0,
                             left: 0,
                             width: '100%',
                             height: '100%',
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)', // 흐려진 배경 색상 및 투명도 조절
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            zIndex: 9999, // 다른 요소 위에 표시하려면 적절한 z-index 값을 설정하세요.
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)', // 더 세련된 투명도
+                            zIndex: 2000,
                         }}
                     >
-                        {/* 로딩 중일 때 로딩 프로그레스 */}
-                        <Box
-                            sx={{
-                                backgroundColor: 'white',
-                                padding: '20px',
-                                borderRadius: '5px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <CircularProgress />
-                            <Typography variant="body2" sx={{ mt: 2 }}>
-                                Loading...
-                            </Typography>
-                        </Box>
+                        <CircularProgress size={60} sx={{ color: '#FF8E53' }} />
                     </Box>
                 )}
                 {/* 뒤로가기 버튼 */}
@@ -256,7 +254,7 @@ function MemberSignUp(props) {
                         Upload Profile Image
                         <input type="file" hidden onChange={handleImageChange} />
                     </Button>
-                    {imagePreview && <img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />}
+                    {selectedFile && <img src={URL.createObjectURL(selectedFile)} alt="Preview" style={{ maxWidth: '100%', maxHeight: '200px' }} />}
                     <Button
                         variant="contained"
                         fullWidth
